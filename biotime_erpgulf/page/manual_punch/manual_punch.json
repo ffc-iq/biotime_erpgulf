@@ -1,0 +1,8 @@
+{
+  "doctype": "Page",
+  "module": "biotime_erpgulf",
+  "name": "manual_punch",
+  "page_name": "manual_punch",
+  "standard": "Yes",
+  "title": "Manual Punch Entry"
+}

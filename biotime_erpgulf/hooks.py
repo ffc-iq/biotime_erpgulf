@@ -25,6 +25,7 @@ required_apps = ["hrms"]
 # ------------------
 
 # include js, css files in header of desk.html
+
 # app_include_css = "/assets/biotime_erpgulf/css/biotime_erpgulf.css"
 # app_include_js = "/assets/biotime_erpgulf/js/employee_checkin.js"
 
@@ -284,3 +285,9 @@ fixtures = [
 # fixtures = [
 #     {"dt": "BioTime Settings", "filters": {"module": "biotime_erpgulf"}},
 # ]
+
+# Customizations Export
+fixtures = [
+    {"dt": "Custom Field", "filters": [["dt", "=", "Attendance"]]},
+    {"dt": "Client Script", "filters": [["module", "=", "Biotime Erpgulf"]]}
+]
