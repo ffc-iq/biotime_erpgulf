@@ -24,6 +24,8 @@ class AttendanceSummary(Document):
             )
 
     def _set_dates(self):
+        if not self.year or not self.month:
+            return  # validate's reqd check will surface the missing-field error
         year = int(self.year)
         month = int(self.month)
         self.from_date = f"{year:04d}-{month:02d}-01"
@@ -51,6 +53,8 @@ class AttendanceSummary(Document):
             )
 
     def refresh_from_attendance(self):
+        if not self.year or not self.month:
+            frappe.throw("Please set Year and Month before refreshing.")
         if not (self.from_date and self.to_date):
             self._set_dates()
 

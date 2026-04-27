@@ -49,12 +49,20 @@ def bulk_create_summaries(year, month, company=None):
                 "month": month,
             })
             doc.insert(ignore_permissions=True)
+            frappe.db.commit()  # per-insert commit keeps cache consistent for the next iteration
             results.append({
                 "employee": emp,
                 "status": "Created",
                 "message": f"Created {doc.name}",
             })
 
+        except frappe.exceptions.DuplicateEntryError:
+            # Cache miss on the existence check — record was already there
+            results.append({
+                "employee": emp,
+                "status": "Existed",
+                "message": "Summary already exists",
+            })
         except Exception:
             results.append({
                 "employee": emp,
@@ -65,8 +73,6 @@ def bulk_create_summaries(year, month, company=None):
                 frappe.get_traceback(),
                 f"bulk_create_summaries: failed for {emp}",
             )
-
-    frappe.db.commit()
 
     created = sum(1 for r in results if r["status"] == "Created")
     existed = sum(1 for r in results if r["status"] == "Existed")
