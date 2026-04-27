@@ -7,6 +7,7 @@ from frappe.utils import getdate, now_datetime, today
 
 class AttendanceSummary(Document):
     def validate(self):
+        self.month = str(self.month).zfill(2)
         self._set_dates()
         self._check_duplicate()
 

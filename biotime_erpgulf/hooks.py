@@ -147,13 +147,14 @@ doctype_list_js = {
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+    "Attendance": {
+        "after_insert": "biotime_erpgulf.attendance_summary_hooks.on_attendance_change",
+        "on_submit": "biotime_erpgulf.attendance_summary_hooks.on_attendance_change",
+        "on_cancel": "biotime_erpgulf.attendance_summary_hooks.on_attendance_change",
+        "on_update_after_submit": "biotime_erpgulf.attendance_summary_hooks.on_attendance_change",
+    }
+}
 
 
 
