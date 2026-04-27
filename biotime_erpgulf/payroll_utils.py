@@ -1,72 +1,70 @@
 """
 Payroll helpers for biotime_erpgulf.
 
-These functions are called from Salary Structure formulas.
-ERPNext passes `employee`, `start_date`, `end_date` as formula variables
-automatically when generating a Salary Slip, so no extra wiring needed.
+These functions are called from Salary Structure formulas. ERPNext passes
+`employee`, `start_date`, `end_date` as formula variables automatically when
+generating a Salary Slip.
+
+Data source: Attendance Summary (docstatus = 1, i.e. submitted only).
+If no submitted summary exists for the period, an error is raised so HR
+knows payroll is missing data and must lock the summary first.
 """
 
 import frappe
+from frappe import _
+
+
+def _get_summary_field(employee, start_date, end_date, fieldname):
+    """
+    Look up the value of `fieldname` from a SUBMITTED Attendance Summary
+    for this employee and date range. Raises a clear error if missing.
+    """
+    value = frappe.db.get_value(
+        "Attendance Summary",
+        {
+            "employee": employee,
+            "from_date": start_date,
+            "to_date": end_date,
+            "docstatus": 1,
+        },
+        fieldname,
+    )
+    if value is None:
+        frappe.throw(
+            _(
+                "No submitted Attendance Summary found for employee {0} "
+                "for the period {1} to {2}. Please create and submit the "
+                "summary before running payroll."
+            ).format(employee, start_date, end_date),
+            title=_("Missing Attendance Summary"),
+        )
+    return value
 
 
 def get_total_late_minutes(employee, start_date, end_date):
-    """
-    Sum the custom `late_minutes` field from submitted Attendance records
-    for the given employee and date range.
-
-    Returns 0 if no records found (so the formula never breaks).
-    """
-    result = frappe.db.sql("""
-        SELECT COALESCE(SUM(late_minutes), 0) AS total
-        FROM `tabAttendance`
-        WHERE employee = %s
-          AND attendance_date BETWEEN %s AND %s
-          AND docstatus = 1
-    """, (employee, start_date, end_date), as_dict=True)
-    return float(result[0].total or 0)
+    """Total late minutes for the period (already grace-adjusted in attendance)."""
+    return int(_get_summary_field(employee, start_date, end_date, "total_late_minutes") or 0)
 
 
 def get_total_overtime_amount(employee, start_date, end_date):
     """
-    Sum the custom `overtime_amount` field from submitted Attendance records.
-    Note: overtime_amount is already (overtime_hours * 1.5), so this value
-    represents the 'hours equivalent' to pay at the normal hourly rate.
+    Total overtime amount in 'hours-equivalent' form (raw OT × 1.5).
+    This is the value to multiply by hourly_rate to get OT pay.
+    The 1-hour-per-day threshold is applied at the attendance level, not here.
     """
-    result = frappe.db.sql("""
-        SELECT COALESCE(SUM(overtime_amount), 0) AS total
-        FROM `tabAttendance`
-        WHERE employee = %s
-          AND attendance_date BETWEEN %s AND %s
-          AND docstatus = 1
-    """, (employee, start_date, end_date), as_dict=True)
-    return float(result[0].total or 0)
+    return float(_get_summary_field(employee, start_date, end_date, "total_overtime_amount") or 0)
 
 
 def get_absent_days(employee, start_date, end_date):
-    """
-    Count days marked as 'Absent' in the period.
-    """
-    result = frappe.db.sql("""
-        SELECT COUNT(*) AS cnt
-        FROM `tabAttendance`
-        WHERE employee = %s
-          AND attendance_date BETWEEN %s AND %s
-          AND status = 'Absent'
-          AND docstatus = 1
-    """, (employee, start_date, end_date), as_dict=True)
-    return int(result[0].cnt or 0)
+    """Number of days marked Absent in the period."""
+    return int(_get_summary_field(employee, start_date, end_date, "absent_days") or 0)
 
 
 def get_half_days(employee, start_date, end_date):
     """
-    Count days marked as 'Half Day' in the period.
+    Number of Half Day records in the period.
+    NOTE: Returns 0 — Attendance Summary does not yet store half_days (deferred
+    until the custom leave DocType is built). Kept as a placeholder so existing
+    Salary Structure formulas that call this don't break.
     """
-    result = frappe.db.sql("""
-        SELECT COUNT(*) AS cnt
-        FROM `tabAttendance`
-        WHERE employee = %s
-          AND attendance_date BETWEEN %s AND %s
-          AND status = 'Half Day'
-          AND docstatus = 1
-    """, (employee, start_date, end_date), as_dict=True)
-    return int(result[0].cnt or 0)
+    return 0
