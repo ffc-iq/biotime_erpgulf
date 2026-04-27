@@ -62,13 +62,15 @@ def calculate_attendance(employee, date, punches):
         diff = last_punch - first_punch
         working_hours = round(diff.total_seconds() / 3600, 2)
 
-    # Calculate overtime
+    # Calculate overtime — must be >= 1 hour to count (HR rule)
     overtime_hours = 0.0
     overtime_amount = 0.0
     if last_punch and last_punch > overtime_start:
         diff = last_punch - overtime_start
-        overtime_hours = round(diff.total_seconds() / 3600, 2)
-        overtime_amount = round(overtime_hours * 1.5, 2)
+        raw_ot = diff.total_seconds() / 3600
+        if raw_ot >= 1.0:
+            overtime_hours = round(raw_ot, 2)
+            overtime_amount = round(overtime_hours * 1.5, 2)
 
     return {
         "status": status,
