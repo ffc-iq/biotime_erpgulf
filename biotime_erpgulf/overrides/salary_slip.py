@@ -1,4 +1,3 @@
-import frappe
 from hrms.payroll.doctype.salary_slip.salary_slip import SalarySlip
 
 from biotime_erpgulf.payroll_utils import (
@@ -28,8 +27,9 @@ class CustomSalarySlip(SalarySlip):
             }
         )
 
-    def before_naming(self):
-        if self.employee and not self.employee_name:
-            self.employee_name = frappe.db.get_value(
-                "Employee", self.employee, "employee_name"
-            )
+    def autoname(self):
+        # HRMS's __init__ sets default_series before self.employee is populated,
+        # which produces 'Sal Slip/None/...' names. Recompute now that self.employee is set.
+        if self.employee:
+            self.default_series = f"Sal Slip/{self.employee}/.#####"
+        super().autoname()
