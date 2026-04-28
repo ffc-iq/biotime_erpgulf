@@ -1,3 +1,4 @@
+import frappe
 from hrms.payroll.doctype.salary_slip.salary_slip import SalarySlip
 
 from biotime_erpgulf.payroll_utils import (
@@ -26,3 +27,9 @@ class CustomSalarySlip(SalarySlip):
                 "get_absent_days": get_absent_days,
             }
         )
+
+    def before_naming(self):
+        if self.employee and not self.employee_name:
+            self.employee_name = frappe.db.get_value(
+                "Employee", self.employee, "employee_name"
+            )
