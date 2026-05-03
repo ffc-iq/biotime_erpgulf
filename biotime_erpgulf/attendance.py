@@ -1,7 +1,7 @@
 import requests
 import frappe
 from datetime import datetime, timedelta, time
-from frappe.utils import get_datetime, now_datetime
+from frappe.utils import get_datetime, getdate, now_datetime
 import traceback
 
 
@@ -94,6 +94,11 @@ def process_attendance_for_employee_date(employee, date):
 
     if not punch_times:
         return
+
+    today = now_datetime().date()
+    if getdate(date) == today:
+        if not any(p.hour >= 12 for p in punch_times):
+            return
 
     result = calculate_attendance(employee, date, punch_times)
     if not result:

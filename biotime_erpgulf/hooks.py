@@ -168,9 +168,11 @@ doc_events = {
 scheduler_events = {
     "hourly": [
         "biotime_erpgulf.attendance.biotime_attendance",
-       
-    ],
 
+    ],
+    "cron": {
+        "0 6 * * *": ["biotime_erpgulf.attendance.run_biotime_attendance"],
+    },
 }
 
 # scheduler_events = {
